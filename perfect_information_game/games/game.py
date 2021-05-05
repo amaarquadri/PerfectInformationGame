@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+from typing import Optional, Sequence, Tuple, Literal
 
 
 # noinspection PyUnresolvedReferences
@@ -16,10 +17,10 @@ class Game(ABC):
 
     # INSTANCE FUNCTIONS
 
-    def __init__(self, state=None):
+    def __init__(self, state: Optional[np.ndarray] = None):
         self.state = np.copy(state if state is not None else self.STARTING_STATE)
 
-    def get_state(self):
+    def get_state(self) -> np.ndarray:
         """
         The result will be a matrix with shape (n, m, k) where the board has dimensions of nxm and
         k is the number of features.
@@ -34,7 +35,7 @@ class Game(ABC):
         """
         return self.state
 
-    def set_state(self, state):
+    def set_state(self, state: np.ndarray):
         """
         Set the state of this Game.
 
@@ -46,7 +47,7 @@ class Game(ABC):
         self.set_state(self.STARTING_STATE)
 
     @classmethod
-    def to_string(cls, state):
+    def to_string(cls, state: np.ndarray) -> str:
         """
         The board should be drawn in book-reading fashion. i.e. The first index represents the row from top to bottom
         and the second index represents the column from left to right.
@@ -61,7 +62,7 @@ class Game(ABC):
         return self.to_string(self.state)
 
     @abstractmethod
-    def perform_user_move(self, clicks):
+    def perform_user_move(self, clicks: Sequence[Tuple[int, int]]):
         """
         Performs the move specified by the clicks, on the specified state and returns the resulting state.
         """
@@ -70,12 +71,12 @@ class Game(ABC):
     # CLASS LEVEL GAME SPECIFIC ABSTRACT FUNCTIONS
 
     @classmethod
-    def is_player_1_turn(cls, state):
+    def is_player_1_turn(cls, state: np.ndarray) -> bool:
         return np.all(state[..., -1])
 
     @classmethod
     @abstractmethod
-    def get_possible_moves(cls, state):
+    def get_possible_moves(cls, state: np.ndarray) -> Sequence[np.ndarray]:
         """
         The order of the returned states must be sorted based on the flattened versions of MOVE_SHAPE.
 
@@ -85,7 +86,7 @@ class Game(ABC):
 
     @classmethod
     @abstractmethod
-    def get_legal_moves(cls, state):
+    def get_legal_moves(cls, state: np.ndarray) -> np.ndarray:
         """
         :return: A numpy array with shape=MOVE_SHAPE where False corresponds to an illegal move
                  and True corresponds to a legal move.
@@ -94,19 +95,19 @@ class Game(ABC):
 
     @classmethod
     @abstractmethod
-    def is_over(cls, state):
+    def is_over(cls, state: np.ndarray) -> bool:
         pass
 
     @classmethod
     @abstractmethod
-    def get_winner(cls, state):
+    def get_winner(cls, state: np.ndarray) -> Literal[-1, 0, 1]:
         """
         :return: 1 if player 1 won, 0 if draw, -1 if player 2 won.
         """
         pass
 
     @classmethod
-    def get_img_index_representation(cls, state):
+    def get_img_index_representation(cls, state: np.ndarray) -> np.ndarray:
         """
         The result will be a matrix with shape (n, m) and dtype=int. Each element will be an integer corresponding to
         which image to use to represent that square. The mapping from indices to file names should be provided in a
@@ -120,14 +121,14 @@ class Game(ABC):
         return representation
 
     @classmethod
-    def needs_checkerboard(cls):
+    def needs_checkerboard(cls) -> bool:
         """
         If this game needs the UI to draw a checkerboard below the pieces, then this should return True.
         """
         return False
 
     @classmethod
-    def get_ruleset(cls):
+    def get_ruleset(cls) -> Optional[str]:
         """
         Returns the ruleset that the game is configured to be using. For example, the board size.
         If only 1 ruleset is configured for the game, then None will be returned.
@@ -135,13 +136,13 @@ class Game(ABC):
         return None
 
     @classmethod
-    def null_move(cls, state):
+    def null_move(cls, state: np.ndarray) -> np.ndarray:
         move = np.copy(state)
         move[..., -1] = 0 if cls.is_player_1_turn(state) else 1
         return move
 
     @staticmethod
-    def is_board_full(state):
+    def is_board_full(state: np.ndarray) -> bool:
         combined_board = state[..., 0]
         # loop over all indices of the last axis except for -1, which corresponds to turn information
         for i in range(1, state.shape[-1] - 1):
@@ -149,9 +150,9 @@ class Game(ABC):
         return np.all(combined_board == 1)
 
     @classmethod
-    def is_valid(cls, i, j):
+    def is_valid(cls, i: int, j: int) -> bool:
         return 0 <= i < cls.ROWS and 0 <= j < cls.COLUMNS
 
     @classmethod
-    def heuristic(cls, state):
+    def heuristic(cls, state: np.ndarray) -> float:
         raise NotImplemented()
